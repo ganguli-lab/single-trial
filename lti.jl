@@ -10,13 +10,14 @@ function genDyn(N, K, dFast, dSlowLow, dSlowDiff)
 end
 
 function genDynRot(N, K, dFast, dSlowLow, dSlowDiff, omegaScale)
-  Ds = exp(1im * (rand(div(K, 2)) * 2 - 1)) .* (rand(div(K, 2)) * dSlowDiff + dSlowLow);
+  Khalf = div(K, 2)
+  Ds = exp(1im * (rand(Khalf) * 2 - 1)) .* (rand(Khalf) * dSlowDiff + dSlowLow);
   Ds = [Ds; conj(Ds); dFast * ones(N - K)];
   U, _ = qr(randn(N, N));
-  U = hcat(U[:, 1:K / 2] + U[:, K / 2 + 1:K] * 1im,
-           U[:, 1:K / 2] - U[:, K / 2 + 1:K] * 1im,
+  U = hcat(U[:, 1:Khalf] + U[:, Khalf + 1:K] * 1im,
+           U[:, 1:Khalf] - U[:, Khalf + 1:K] * 1im,
            U[:, K + 1:end] * sqrt(2)) / sqrt(2);
-  return real(U' * diagm(Ds) * U), U, Ds
+  return real(U * diagm(Ds) * U'), U, Ds
 end
 
 function genObsSamp(N, M)
@@ -59,7 +60,7 @@ end
 
 function xCov(Y, offset::Int64)
   _, T = size(Y)
-  return Y[:, offset + 1:end] * Y[:, 1:end - offset]' / (T - offset)
+  return  Y[:, offset + 1:end] * Y[:, 1:end - offset]' / (T - offset)
 end
 
 function hankel(Y, dly::Int64)
@@ -95,6 +96,6 @@ function hoKalman(Y, dly::Int64, dim::Int64)
   O = v * diagm(d.^0.25)
   # solve the recursive linear regression
   x = O[1:end - M, :]; y = O[M + 1:end, :]
-  return y \ x
+  return (x' * y) * inv(x' * x)
 end
 end
