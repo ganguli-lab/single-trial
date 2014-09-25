@@ -64,7 +64,7 @@ end
 
 function hankel(Y, dly::Int64)
   M, T = size(Y)
-  H = zeros(M * delay, M * delay)
+  H = zeros(M * dly, M * dly)
 
   # First block column
   for blkRow = 1:dly
@@ -86,6 +86,7 @@ function hankel(Y, dly::Int64)
 end
 
 function hoKalman(Y, dly::Int64, dim::Int64)
+  M, _ = size(Y)
   # hankel matrix
   H = hankel(Y, dly)
   # left singular vectors
