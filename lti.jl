@@ -20,10 +20,13 @@ function genDynRot(N, K, dFast, dSlowLow, dSlowDiff, omegaScale)
   return real(U * diagm(Ds) * U'), U, Ds
 end
 
+# Generate a linear observation matrix that randomly samples M out of N states
 function genObsSamp(N, M)
   return eye(N)[randperm(N), :][1:M, :]
 end
 
+# solve the discrete Lyapunov equation using an infinite series
+# Not checking convergence, not efficient
 function dlyap(A, Q)
   X = Q
   while true
@@ -96,6 +99,6 @@ function hoKalman(Y, dly::Int64, dim::Int64)
   O = v * diagm(d.^0.25)
   # solve the recursive linear regression
   x = O[1:end - M, :]; y = O[M + 1:end, :]
-  return (x' * y) * inv(x' * x)
+  return (x' * y) * inv(x' * x), H
 end
 end
