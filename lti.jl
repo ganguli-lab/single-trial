@@ -1,6 +1,6 @@
 module LTI
 
-export genDyn, genDynRot, genObsSamp, dlyap, runLTI, xCov, hankel, hoKalman
+export genDyn, genDynRot, genObsSamp, dlyap, runLTI, xCov, xCovTheory, hankel, hoKalman
 
 function genDyn(N, K, dFast, dSlowLow, dSlowDiff)
   Ds = rand(K) * dSlowDiff + dSlowLow;
@@ -62,19 +62,28 @@ function runLTI(A, C, Q, R, T::Int64; P=nothing)
 end
 
 function xCov(Y, offset::Int64)
-  _, T = size(Y)
-  return  Y[:, offset + 1:end] * Y[:, 1:end - offset]' / (T - offset)
+  assert(offset >= 0);
+  _, T = size(Y);
+  return  Y[:, offset + 1:end] * Y[:, 1:end - offset]' / (T - offset);
 end
 
-function hankel(Y, dly::Int64)
-  M, T = size(Y)
+function xCovTheory(A, C, Q, offset::Int64; P=nothing)
+  assert(offset >= 0);
+  if P == nothing
+    P = dlyap(A, Q);
+  end
+  return C * A^offset * P * C';
+end
+
+function hankel(xCovFun, dly::Int64)
+  M, _ = size(xCovFun(1))
   H = zeros(M * dly, M * dly)
 
   # First block column
   for blkRow = 1:dly
     rowStart = (blkRow - 1) * M + 1
     rowStop = blkRow * M
-    H[rowStart:rowStop, 1:M] = xCov(Y, blkRow)
+    H[rowStart:rowStop, 1:M] = xCovFun(blkRow)
   end
 
   # remaining block columns
@@ -84,7 +93,7 @@ function hankel(Y, dly::Int64)
     # shifting up the previous blk column
     H[1:end - M, colStart:colStop] = H[M + 1:end, colStart - M:colStop - M]
     # compute only the last block
-    H[end - M + 1:end, colStart:colStop] = xCov(Y, dly + blkCol - 1)
+    H[end - M + 1:end, colStart:colStop] = xCovFun(dly + blkCol - 1)
   end
   return H
 end
