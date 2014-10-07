@@ -5,7 +5,7 @@ using Optim
 global const epsilon = 1e-9
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
-immutable ARMPModel
+immutable ARMPModel <: HDModel
 	p::Integer
 	n::Integer
 	c::Float64
@@ -49,19 +49,6 @@ function rand(model::ARMPModel)
 			x[:, t] = phi * x[:, t - 1] + randn(p)
 		end
 		return x
-	end
-end
-
-# sample the spectrum of a model nTrial times
-function randSpec(model::ARMPModel, nTrial::Integer)
-	let p = model.p, n = model.n, phi = model.phi, c = model.c
-		D = Array(Float64, p * nTrial)
-		for kTrial in 1:nTrial
-			x = rand(model)
-			d, _ = eig(x * x' / n)
-			D[(kTrial - 1) * p + 1:kTrial * p] = d
-		end
-		return D
 	end
 end
 

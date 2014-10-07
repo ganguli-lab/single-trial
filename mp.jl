@@ -1,6 +1,6 @@
 export MPModel, rand, ub, lb, spec
 
-immutable MPModel
+immutable MPModel <: HDModel
   p::Integer
   n::Integer
   c::Float64
