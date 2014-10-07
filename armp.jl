@@ -45,7 +45,7 @@ end
 function rand(model::ARMPModel)
 	let p = model.p, n = model.n, phi = model.phi, c = model.c
 		x = zeros(p, n)
-		P = sqrt(1.0 - phi^2) * eye(p)
+		P = eye(p) ./ sqrt(1.0 - phi^2)
 		x[:, 1] = P * randn(p);
 		for t in 2:n
 			x[:, t] = phi * x[:, t - 1] + randn(p)
@@ -94,7 +94,7 @@ function stieltjes(model::ARMPModel)
 
 	A(s) = 1.0 / sqrt((model.c * s + 1.0 + model.phi^2)^2 - 4.0 * model.phi^2)
 	function S(z)
-		s = 0.1 + 1im * epsilon
+		s = epsilon + 1im * epsilon
 		snew = 0.0
 		while true
 			snew = 1 / (-z + A(s))
