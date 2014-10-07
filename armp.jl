@@ -35,7 +35,7 @@ immutable ARMPModel
 		end
 		c = p / n
 		if abs(c - cp) > 1e-6
-			warn("actual c set to ", c)
+			warn(string("actual c set to ", c))
 		end
 		return new(p, n, c, phi)
 	end
@@ -112,7 +112,8 @@ function spec(model::ARMPModel)
 	global epsilon
 	s = stieltjes(model)
 
-	return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
+	#return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
+	return x -> abs(imag(s(x + epsilon * 1im))) / pi
 end
 
 end
