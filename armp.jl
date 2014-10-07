@@ -1,5 +1,3 @@
-module HDStat
-
 export ARMPModel, rand, randSpec, spec, ub, lb
 
 using Optim
@@ -114,6 +112,4 @@ function spec(model::ARMPModel)
 
 	#return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
 	return x -> abs(imag(s(x + epsilon * 1im))) / pi
-end
-
 end

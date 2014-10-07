@@ -1,5 +1,3 @@
-module HDStat
-
 export MPModel, rand, ub, lb, spec
 
 immutable MPModel
@@ -54,6 +52,4 @@ function spec(model::MPModel)
   l = model.c < 1 ? model.c : 1 / model.c
   low, up = lb(model), ub(model)
   return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / l / x
-end
-
 end
