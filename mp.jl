@@ -1,6 +1,6 @@
 module HDStat
 
-export ub, lb
+export MPModel, rand, ub, lb, spec
 
 immutable MPModel
   p::Integer
@@ -36,6 +36,10 @@ immutable MPModel
   end
 end
 
+function rand(model::MPModel)
+  return randn(model.p, model.n) * model.sigma
+end
+
 function lb(model::MPModel)
   l = model.c < 1 ? model.c : 1 / model.c
   return model.sigma^2 * (1 - sqrt(l))^2
@@ -49,7 +53,7 @@ end
 function spec(model::MPModel)
   l = model.c < 1 ? model.c : 1 / model.c
   low, up = lb(model), ub(model)
-  return x -> 1 / 2 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / l / x
+  return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / l / x
 end
 
 end
