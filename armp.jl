@@ -1,4 +1,4 @@
-module ARMP
+module HDStat
 
 export ARMPModel, rand, randSpec, spec, ub, lb
 
