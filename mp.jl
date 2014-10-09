@@ -39,17 +39,14 @@ function rand(model::MPModel)
 end
 
 function lb(model::MPModel)
-  l = model.c < 1 ? model.c : 1 / model.c
-  return model.sigma^2 * (1 - sqrt(l))^2
+  return model.sigma^2 * (1 - sqrt(model.c))^2
 end
 
 function ub(model::MPModel)
-  l = model.c < 1 ? model.c : 1 / model.c
-  return model.sigma^2 * (1 + sqrt(l))^2
+  return model.sigma^2 * (1 + sqrt(model.c))^2
 end
 
 function spec(model::MPModel)
-  l = model.c < 1 ? model.c : 1 / model.c
   low, up = lb(model), ub(model)
-  return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / l / x
+  return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / model.c / x
 end

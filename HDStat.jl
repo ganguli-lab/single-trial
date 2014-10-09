@@ -1,6 +1,10 @@
 module HDStat
 
+export HDModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport
+
 abstract HDModel
+
+global const epsilon = 1e-9
 
 include("mp.jl")
 include("armp.jl")
@@ -18,16 +22,25 @@ function randSpec(model::HDModel, nTrial::Integer)
   end
 end
 
-function logSupport(model::HDModel, n::Integer)
-  lower, upper = lb(model), ub(model)
+function randSpecDensity(model::HDModel, nTrial::Integer, nBin::Integer)
+  D = randSpec(model, nTrial)
+  bins = linspace(minimum(D), maximum(D), nBin)
+  _, counts = hist(D, bins)
+  counts /= length(D) * mean(diff(bins))
 
-  return logspace(log10(lower + 1e-6), log10(upper + 1e-6), n)
+  return (bins[2:end] + bins[1:end - 1]) * 0.5, counts
 end
 
-function logSupport(model::HDModel, n::Integer)
+function logSpecSupport(model::HDModel, n::Integer)
   lower, upper = lb(model), ub(model)
 
-  return linspace(lower + 1e-6, upper + 1e-6, n)
+  return logspace(log10(lower + epsilon), log10(upper - epsilon), n)
+end
+
+function linSpecSupport(model::HDModel, n::Integer)
+  lower, upper = lb(model), ub(model)
+
+  return linspace(lower + epsilon, upper - epsilon, n)
 end
 
 end

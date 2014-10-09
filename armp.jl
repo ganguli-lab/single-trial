@@ -1,8 +1,6 @@
-export ARMPModel, rand, randSpec, spec, ub, lb
+export ARMPModel, rand, spec, ub, lb
 
 using Optim
-
-global const epsilon = 1e-9
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
 immutable ARMPModel <: HDModel
@@ -66,7 +64,7 @@ end
 # Lower bound of the eigenvalue spectrum
 function lb(model::ARMPModel)
 	f = zFunc(model)
-	if model.c >= 1.0
+	if model.c > 1.0
 		bounds = [-eps(Float64), -1 / model.c * (1 + model.phi)^2 - eps(Float64)];
 	else
 		bounds = [eps(Float64), 1e16];
@@ -77,19 +75,31 @@ end
 function stieltjes(model::ARMPModel)
 	global epsilon
 
-	A(s) = 1.0 / sqrt((model.c * s + 1.0 + model.phi^2)^2 - 4.0 * model.phi^2)
 	function S(z)
-		s = epsilon + 1im * epsilon
-		snew = 0.0
+		s::Complex128 = epsilon + 1im * epsilon
+		snew::Complex128 = 0.0
 		while true
-			snew = 1 / (-z + A(s))
-			if abs(snew - s) < 1e-9
+			snew = 1 / (-z + 1.0 / sqrt((model.c * s + 1.0 + model.phi^2)^2 - 4.0 * model.phi^2))
+			if abs(snew - s) < epsilon
 				return s
 			end
 			s = snew
 		end
 	end
 	return S
+end
+
+function dtransform(model::ARMPModel)
+	global epsilon
+	mu = spec(model)
+	l, u = lb(model), ub(model)
+	integrand(t, z) = z / (z^2 - t^2) * mu(t)
+	integral(z) = quadgk(t -> integrand(t, z), l + epsilon, u - epsilon; maxevals=1e4, order=7)[1]
+	function D(z)
+		tmp = integral(z)
+		return tmp * (model.c * tmp + 1 - model.c / z)
+	end
+	return D
 end
 
 # Returns a spectrum function for the given model
