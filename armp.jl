@@ -1,4 +1,4 @@
-export ARMPModel, rand, spec, ub, lb
+export ARMPModel, rand, spec, ub, lb, pertThresh
 
 using Optim
 
@@ -93,13 +93,16 @@ function dtransform(model::ARMPModel)
 	global epsilon
 	mu = spec(model)
 	l, u = lb(model), ub(model)
-	integrand(t, z) = z / (z^2 - t^2) * mu(t)
-	integral(z) = quadgk(t -> integrand(t, z), l + epsilon, u - epsilon; maxevals=1e4, order=7)[1]
+	integral(z) = quadgk(t -> sqrt(z) / (z - t) * mu(t), l + epsilon, u - epsilon; maxevals=1e4, order=7)[1]
 	function D(z)
-		tmp = integral(z)
-		return tmp * (model.c * tmp + 1 - model.c / z)
+		tmp::Float64 = integral(z)
+		return tmp * (model.c * tmp + 1 - model.c / sqrt(z))
 	end
 	return D
+end
+
+function pertThresh(model::ARMPModel)
+	1.0 / dtransform(model)(ub(model) + 1e-4)
 end
 
 # Returns a spectrum function for the given model
