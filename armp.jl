@@ -1,6 +1,6 @@
-export ARMPModel, rand, spec, ub, lb, pertThresh
+export ARMPModel, rand, spec, ub, lb, pertThresh, zPoints
 
-using Optim
+using Optim, Cubature
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
 immutable ARMPModel <: HDModel
@@ -76,6 +76,7 @@ function stieltjes(model::ARMPModel)
 	global epsilon
 
 	function S(z)
+		global zPoints
 		s::Complex128 = epsilon + 1im * epsilon
 		snew::Complex128 = 0.0
 		while true
@@ -93,9 +94,8 @@ function dtransform(model::ARMPModel)
 	global epsilon
 	mu = spec(model)
 	l, u = lb(model), ub(model)
-	integral(z) = quadgk(t -> sqrt(z) / (z - t) * mu(t), l + epsilon, u - epsilon; maxevals=1e4, order=7)[1]
 	function D(z)
-		tmp::Float64 = integral(z)
+		tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-4, abstol=1e-3)[1]
 		return tmp * (model.c * tmp + 1 - model.c / sqrt(z))
 	end
 	return D
