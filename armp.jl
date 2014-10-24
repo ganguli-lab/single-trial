@@ -95,7 +95,7 @@ function dtransform(model::ARMPModel)
 	mu = spec(model)
 	l, u = lb(model), ub(model)
 	function D(z)
-		tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-4, abstol=1e-3)[1]
+		tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-3, abstol=1e-3)[1]
 		return tmp * (model.c * tmp + 1 - model.c / sqrt(z))
 	end
 	return D
