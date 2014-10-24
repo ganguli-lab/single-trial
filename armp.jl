@@ -64,10 +64,13 @@ end
 # Lower bound of the eigenvalue spectrum
 function lb(model::ARMPModel)
 	f = zFunc(model)
-	if model.c > 1.0
+	if model.c >= 1.0
 		bounds = [-eps(Float64), -1 / model.c * (1 + model.phi)^2 - eps(Float64)];
 	else
 		bounds = [eps(Float64), 1e16];
+	end
+	if bounds[1] >= bounds[2]
+		println(model.p, " ", model.n)
 	end
 	return -optimize(x -> 0.0 - f(x), bounds[1], bounds[2]).f_minimum;
 end
