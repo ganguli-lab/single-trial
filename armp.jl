@@ -1,4 +1,4 @@
-export ARMPModel, rand, spec, ub, lb, pertThresh, zPoints
+export ARMPModel, rand, spec, ub, lb
 
 using Optim, Cubature
 
@@ -91,21 +91,6 @@ function stieltjes(model::ARMPModel)
 		end
 	end
 	return S
-end
-
-function dtransform(model::ARMPModel)
-	global epsilon
-	mu = spec(model)
-	l, u = lb(model), ub(model)
-	function D(z)
-		tmp = pquadrature(t -> z / (z^2 - t^2) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-3, abstol=1e-3)[1]
-		return tmp * (model.c * tmp + (1 - model.c) / z)
-	end
-	return D
-end
-
-function pertThresh(model::ARMPModel)
-	sqrt(1.0 / dtransform(model)(ub(model) + 1e-4))
 end
 
 # Returns a spectrum function for the given model

@@ -1,6 +1,6 @@
 module HDStat
 
-export HDModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport
+export HDModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
 abstract HDModel
 
@@ -8,6 +8,22 @@ global const epsilon = 1e-9
 
 include("mp.jl")
 include("armp.jl")
+
+function dtransform(mu, l, u, c)
+  function D(z)
+    tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-3, abstol=1e-3)[1]
+    return tmp * (c * tmp + (1 - c) / sqrt(z))
+  end
+  return D
+end
+
+function pertThresh(mu, l, u, c)
+  1.0 / dtransform(mu, l, u, c)(u + 1e-4)
+end
+
+function pertThresh(model::HDModel)
+  pertThresh(spec(model), lb(model), ub(model), model.c)
+end
 
 # sample the spectrum of a model nTrial times
 function randSpec(model::HDModel, nTrial::Integer)
