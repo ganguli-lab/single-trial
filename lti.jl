@@ -31,7 +31,7 @@ function dlyap(A, Q)
   X = Q
   while true
     Xnew = Q + A * X * A'
-    if norm(Xnew - X) < 1e-14
+    if norm(Xnew - X) < sqrt(eps(Float64))
       return X
     else
       X = Xnew
@@ -101,7 +101,7 @@ end
 function hoKalman(Y, dly::Int64, dim::Int64)
   M, _ = size(Y)
   # hankel matrix
-  H = hankel(Y, dly)
+  H = hankel(x -> xCov(Y, x), dly)
   # left singular vectors
   d, v = eigs(H * H', nev=dim)
   # observability matrix

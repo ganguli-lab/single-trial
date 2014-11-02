@@ -1,6 +1,6 @@
 export ARMPModel, rand, spec, ub, lb
 
-using Optim, Cubature
+using Optim
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
 immutable ARMPModel <: HDModel
@@ -50,14 +50,16 @@ function rand(model::ARMPModel)
 	end
 end
 
+# TODO: bit a of hack here for the c > 1 case, no reference
 function zFunc(model::ARMPModel)
-	return s -> (-1 ./ s + 1 ./ sqrt((model.c * s + 1 + model.phi^2).^2 - 4 * model.phi^2))
+	# return s -> (-1 ./ s + 1 ./ sqrt((model.c * s + 1 + model.phi^2).^2 - 4 * model.phi^2))
+	return s -> (-1 ./ s + sign(s + (1 + model.phi^2) / model.c) ./ sqrt((model.c * s + 1 + model.phi^2).^2 - 4 * model.phi^2))
 end
 
 # Upper bound of the eigenvalue spectrum
 function ub(model::ARMPModel)
 	f = zFunc(model)
-	bounds = [-1 / model.c * (1 - model.phi)^2 + 1e-9, 0 - 1e-9]
+	bounds = [-1 / model.c * (1 - model.phi)^2 + sqrt(eps(Float64)), -sqrt(eps(Float64))]
 	return optimize(f, bounds[1], bounds[2]).f_minimum
 end
 
@@ -65,9 +67,9 @@ end
 function lb(model::ARMPModel)
 	f = zFunc(model)
 	if model.c >= 1.0
-		bounds = [-eps(Float64), -1 / model.c * (1 + model.phi)^2 - eps(Float64)];
+		bounds = [-1e16, -1 / model.c * (1 + model.phi)^2 - sqrt(eps(Float64))];
 	else
-		bounds = [eps(Float64), 1e16];
+		bounds = [sqrt(eps(Float64)), 1e16];
 	end
 	if bounds[1] >= bounds[2]
 		println(model.p, " ", model.n)
@@ -80,10 +82,11 @@ function stieltjes(model::ARMPModel)
 
 	function S(z)
 		global zPoints
-		s::Complex128 = epsilon + 1im * epsilon
+		s::Complex128 = 0.1 + 1im
 		snew::Complex128 = 0.0
 		while true
 			snew = 1 / (-z + 1.0 / sqrt((model.c * s + 1.0 + model.phi^2)^2 - 4.0 * model.phi^2))
+			# println(snew)
 			if abs(snew - s) < epsilon
 				return s
 			end

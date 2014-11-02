@@ -9,6 +9,8 @@ global const epsilon = 1e-9
 include("mp.jl")
 include("armp.jl")
 
+using Cubature
+
 function dtransform(mu, l, u, c)
   function D(z)
     tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-3, abstol=1e-3)[1]
@@ -28,11 +30,20 @@ end
 # sample the spectrum of a model nTrial times
 function randSpec(model::HDModel, nTrial::Integer)
   let p = model.p, n = model.n, c = model.c
-    D = Array(Float64, p * nTrial)
+    if c < 1
+      D = Array(Float64, p * nTrial)
+    else
+      D = Array(Float64, n * nTrial)
+    end
     for kTrial in 1:nTrial
       x = rand(model)
-      d, _ = eig(x * x' / n)
-      D[(kTrial - 1) * p + 1:kTrial * p] = d
+      if c < 1
+        d, _ = eig(x * x' / n)
+        D[(kTrial - 1) * p + 1:kTrial * p] = d
+      else
+        d, _ = eig(x' * x / n)
+        D[(kTrial - 1) * n + 1:kTrial * n] = d
+      end
     end
     return D
   end
