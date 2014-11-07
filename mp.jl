@@ -1,4 +1,4 @@
-export MPModel, rand, ub, lb, spec, vecOverlap
+export MPModel, rand, ub, lb, spec, vecOverlap, eigvalXfer
 
 immutable MPModel <: HDModel
   p::Integer
@@ -53,4 +53,8 @@ end
 
 function vecOverlap(model::MPModel)
   return x -> x < sqrt(model.c) ? (0, 0) : (sqrt((x^2 - model.c) / (x^2 + model.c * x)), sqrt((x^2 - model.c) / (x^2 + x)))
+end
+
+function eigvalXfer(model::MPModel)
+  return x -> x < sqrt(model.c) ? ub(model) : (sqrt(x) + 1 / sqrt(x)) * (sqrt(x) + model.c / sqrt(x))
 end
