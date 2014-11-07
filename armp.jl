@@ -3,14 +3,15 @@ export ARMPModel, rand, spec, ub, lb
 using Optim
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
+# The data dimensionality is p-by-n with correlations running across rows
 immutable ARMPModel <: HDModel
 	p::Integer
 	n::Integer
-	c::Float64
+	c::Float64 # c = p / n
 	phi::Float64
 
-	function ARMPModel(p::Integer, n::Integer, phi::Float64)
-		c = (p / n)::Float64
+	function ARMPModel(p::Integer, n::Integer, phi::Number)
+		c = (p / n)
 		if !(0 < c && 0 < phi < 1)
 			error("c or phi out of bound")
 		else
@@ -18,19 +19,19 @@ immutable ARMPModel <: HDModel
 		end
 	end
 
-	function ARMPModel(cp::Float64, phi::Float64)
+	function ARMPModel(cp::Number, phi::Number)
 		if !(0 < cp && 0 < phi < 1)
 			error("c or phi out of bound")
 		end
 		if cp < 1
-			p = 1000::Int64
+			p = 1000
 			n = int(p / cp)
 		else
-			n = 1000::Int64
+			n = 1000
 			p = int(n * cp)
 		end
 		c = p / n
-		if abs(c - cp) > 1e-6
+		if abs(c - cp) > sqrt(eps(Float64))
 			warn(string("actual c set to ", c))
 		end
 		return new(p, n, c, phi)

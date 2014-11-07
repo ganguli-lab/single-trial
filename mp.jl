@@ -1,4 +1,4 @@
-export MPModel, rand, ub, lb, spec
+export MPModel, rand, ub, lb, spec, vecOverlap
 
 immutable MPModel <: HDModel
   p::Integer
@@ -6,7 +6,7 @@ immutable MPModel <: HDModel
   c::Float64
   sigma::Float64
 
-  function MPModel(p::Integer, n::Integer, sigma::Float64)
+  function MPModel(p::Integer, n::Integer, sigma::Number)
     c = (p / n)::Float64
     if !(0 < c && 0 < sigma)
       error("c or sigma out of bound")
@@ -15,7 +15,7 @@ immutable MPModel <: HDModel
     end
   end
 
-  function MPModel(cp::Float64, sigma::Float64)
+  function MPModel(cp::Number, sigma::Number)
     if !(0 < cp && 0 < sigma)
       error("c or phi out of bound")
     end
@@ -49,4 +49,8 @@ end
 function spec(model::MPModel)
   low, up = lb(model), ub(model)
   return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / model.c / x
+end
+
+function vecOverlap(model::MPModel)
+  return x -> x < sqrt(model.c) ? (0, 0) : (sqrt((x^2 - model.c) / (x^2 + model.c * x)), sqrt((x^2 - model.c) / (x^2 + x)))
 end
