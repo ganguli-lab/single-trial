@@ -52,9 +52,13 @@ function spec(model::MPModel)
 end
 
 function vecOverlap(model::MPModel)
-  return x -> x < sqrt(model.c) ? (0, 0) : (sqrt((x^2 - model.c) / (x^2 + model.c * x)), sqrt((x^2 - model.c) / (x^2 + x)))
+  let sigma = model.sigma, c = model.c
+    return x -> x / sigma^2 < sqrt(c) ? (0, 0) : (sqrt((x^2 - c * sigma^2) / (x^2 + c * sigma^2 * x)), sqrt((x^2 - c * sigma^2) / (x^2 + x)))
+  end
 end
 
 function eigvalXfer(model::MPModel)
-  return x -> x < sqrt(model.c) ? ub(model) : (sqrt(x) + 1 / sqrt(x)) * (sqrt(x) + model.c / sqrt(x))
+  let sigma = model.sigma, c = model.c
+    return x -> x / sigma^2 < sqrt(c) ? ub(model) : (sqrt(x) + 1 / sqrt(x)) * (sqrt(x) + c * sigma^2 / sqrt(x))
+  end
 end
