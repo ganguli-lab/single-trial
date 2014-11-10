@@ -1,4 +1,4 @@
-export MPModel, rand, ub, lb, spec, vecOverlap, eigvalXfer
+export MPModel, rand, ub, lb, spec, vecOverlap, eigvalXfer, pertThresh
 
 immutable MPModel <: HDModel
   p::Integer
@@ -49,6 +49,10 @@ end
 function spec(model::MPModel)
   low, up = lb(model), ub(model)
   return x -> 0.5 / pi / model.sigma^2 * sqrt(up - x) * sqrt(x - low) / model.c / x
+end
+
+function pertThresh(model::MPModel)
+  return model.sigma^2 * sqrt(model.p / model.n)
 end
 
 function vecOverlap(model::MPModel)
