@@ -1,6 +1,6 @@
 module HDStat
 
-export HDModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
+export NoiseModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
 abstract NoiseModel
 
