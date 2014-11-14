@@ -1,13 +1,19 @@
 module HDStat
 
-export NoiseModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
+# models
+export NoiseModel, MPModel
+# spectrum
+export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
+# low-rank perturbations
+export ev_sigthresh, ev_xfer, sv_sigthresh, sv_xfer, svec_overlap
+# randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
 abstract NoiseModel
 
 global const epsilon = 1e-9
 
 include("mp.jl")
-include("armp.jl")
+# include("armp.jl")
 
 using Cubature
 
