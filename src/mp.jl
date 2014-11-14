@@ -1,6 +1,6 @@
 export MPModel, rand, ub, lb, spec, vecOverlap, eigvalXfer, pertThresh
 
-immutable MPModel <: HDModel
+immutable MPModel <: NoiseModel
   p::Integer
   n::Integer
   c::Float64

@@ -2,7 +2,7 @@ module HDStat
 
 export HDModel, randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
-abstract HDModel
+abstract NoiseModel
 
 global const epsilon = 1e-9
 
@@ -23,12 +23,12 @@ function pertThresh(mu, l, u, c)
   1.0 / dtransform(mu, l, u, c)(u + 1e-4)
 end
 
-function pertThresh(model::HDModel)
+function pertThresh(model::NoiseModel)
   pertThresh(spec(model), lb(model), ub(model), model.c)
 end
 
 # sample the spectrum of a model nTrial times
-function randSpec(model::HDModel, nTrial::Integer)
+function randSpec(model::NoiseModel, nTrial::Integer)
   let p = model.p, n = model.n, c = model.c
     if c < 1
       D = Array(Float64, p * nTrial)
@@ -49,7 +49,7 @@ function randSpec(model::HDModel, nTrial::Integer)
   end
 end
 
-function randSpecDensity(model::HDModel, nTrial::Integer, nBin::Integer)
+function randSpecDensity(model::NoiseModel, nTrial::Integer, nBin::Integer)
   D = randSpec(model, nTrial)
   bins = linspace(minimum(D), maximum(D), nBin)
   _, counts = hist(D, bins)
@@ -58,13 +58,13 @@ function randSpecDensity(model::HDModel, nTrial::Integer, nBin::Integer)
   return (bins[2:end] + bins[1:end - 1]) * 0.5, counts
 end
 
-function logSpecSupport(model::HDModel, n::Integer)
+function logSpecSupport(model::NoiseModel, n::Integer)
   lower, upper = lb(model), ub(model)
 
   return logspace(log10(lower + epsilon), log10(upper - epsilon), n)
 end
 
-function linSpecSupport(model::HDModel, n::Integer)
+function linSpecSupport(model::NoiseModel, n::Integer)
   lower, upper = lb(model), ub(model)
 
   return linspace(lower + epsilon, upper - epsilon, n)

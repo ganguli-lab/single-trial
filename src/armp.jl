@@ -4,7 +4,7 @@ using Optim
 
 # A high dimensional autoregressive model with shape parameter c and decay phi
 # The data dimensionality is p-by-n with correlations running across rows
-immutable ARMPModel <: HDModel
+immutable ARMPModel <: NoiseModel
 	p::Integer
 	n::Integer
 	c::Float64 # c = p / n
