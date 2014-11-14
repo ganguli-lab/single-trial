@@ -70,7 +70,7 @@ ev_sigthresh(m::MPModel) = m.sigma^2 * sqrt(m.p * m.n)
 
 sv_sigthresh(m::MPModel) = sqrt(ev_sigthresh(m))
 
-function sv_xfer(m::MPModel, s:Number)
+function sv_xfer(m::MPModel, s::Number)
   let sigma = m.sigma, c = m.c, n = m.n
     if s < sv_sigthresh(m); return sv_ub(m); end
     sp = s / sigma / sqrt(n)
