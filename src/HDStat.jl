@@ -6,13 +6,14 @@ export NoiseModel, MPModel
 export rand
 # spectrum
 export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
+export ev_linsupport, ev_logsupport, sv_linsupport, sv_logsupport
 # low-rank perturbations
 export ev_sigthresh, ev_xfer, sv_sigthresh, sv_xfer, svec_overlap
 # randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
 abstract NoiseModel
 
-global const epsilon = 1e-9
+global const epsilon = sqrt(eps(Float64))
 
 include("mp.jl")
 # include("armp.jl")
@@ -66,16 +67,12 @@ function randSpecDensity(model::NoiseModel, nTrial::Integer, nBin::Integer)
   return (bins[2:end] + bins[1:end - 1]) * 0.5, counts
 end
 
-function logSpecSupport(model::NoiseModel, n::Integer)
-  lower, upper = lb(model), ub(model)
+ev_linsupport(m::NoiseModel, k::Integer) = linspace(ev_lb(m) + epsilon, ev_ub(m) - epsilon, k)
 
-  return logspace(log10(lower + epsilon), log10(upper - epsilon), n)
-end
+ev_logsupport(m::NoiseModel, k::Integer) = logspace(log10(ev_lb(m) + epsilon), log10(ev_ub(m) - epsilon), k)
 
-function linSpecSupport(model::NoiseModel, n::Integer)
-  lower, upper = lb(model), ub(model)
+sv_linsupport(m::NoiseModel, k::Integer) = linspace(sv_lb(m) + epsilon, sv_ub(m) - epsilon, k)
 
-  return linspace(lower + epsilon, upper - epsilon, n)
-end
+sv_logsupport(m::NoiseModel, k::Integer) = logspace(log10(sv_lb(m) + epsilon), log10(sv_ub(m) - epsilon), k)
 
 end
