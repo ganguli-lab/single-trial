@@ -3,7 +3,7 @@ module HDStat
 # models
 export NoiseModel, MPModel
 # sampling
-export rand
+export rand, sv_rand, ev_rand
 # spectrum
 export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
 export ev_linsupport, ev_logsupport, sv_linsupport, sv_logsupport
@@ -36,36 +36,13 @@ function pertThresh(model::NoiseModel)
   pertThresh(spec(model), lb(model), ub(model), model.c)
 end
 
-# sample the spectrum of a model nTrial times
-function randSpec(model::NoiseModel, nTrial::Integer)
-  let p = model.p, n = model.n, c = model.c
-    if c < 1
-      D = Array(Float64, p * nTrial)
-    else
-      D = Array(Float64, n * nTrial)
-    end
-    for kTrial in 1:nTrial
-      x = rand(model)
-      if c < 1
-        d, _ = eig(x * x' / n)
-        D[(kTrial - 1) * p + 1:kTrial * p] = d
-      else
-        d, _ = eig(x' * x / n)
-        D[(kTrial - 1) * n + 1:kTrial * n] = d
-      end
-    end
-    return D
-  end
-end
+# sample singular and eiven value spectra given a noise model
 
-function randSpecDensity(model::NoiseModel, nTrial::Integer, nBin::Integer)
-  D = randSpec(model, nTrial)
-  bins = linspace(minimum(D), maximum(D), nBin)
-  _, counts = hist(D, bins)
-  counts /= length(D) * mean(diff(bins))
+sv_rand(m::NoiseModel) = svd(rand(m))[2]
 
-  return (bins[2:end] + bins[1:end - 1]) * 0.5, counts
-end
+ev_rand(m::NoiseModel) = sv_rand(m).^2
+
+# return the support of singular or eigen value spectra given a noise model
 
 ev_linsupport(m::NoiseModel, k::Integer) = linspace(ev_lb(m) + epsilon, ev_ub(m) - epsilon, k)
 

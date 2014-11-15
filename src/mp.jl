@@ -20,7 +20,7 @@ end
 
 function MPModel(cp::Number, sigma::Number)
   if 0 >= cp || 0 >= sigma
-    error("c or phi out of bound")
+    error("c or sigma out of bound")
   end
 
   if cp < 1
@@ -30,7 +30,7 @@ function MPModel(cp::Number, sigma::Number)
   end
   c = p / n
 
-  if abs(c - cp) > sqrt(eps(Float64)); warn(string("actual c set to ", c)); end
+  if abs(c - cp) > epsilon; warn(string("actual c set to ", c)); end
 
   return MPModel(p, n, c, sigma)
 end
@@ -48,6 +48,7 @@ ev_lb(m::MPModel) = m.sigma^2 * abs(sqrt(m.n) - sqrt(m.p))^2
 
 ev_ub(m::MPModel) = m.sigma^2 * (sqrt(m.n) + sqrt(m.p))^2
 
+# TODO: might need better handling at the lower bound of support, when p == n
 function ev_spec(m::MPModel)
   l, u = ev_lb(m), ev_ub(m)
   x -> sqrt((u - x) * (x - l)) / x / 2 / pi / m.sigma^2 / min(m.p, m.n)
