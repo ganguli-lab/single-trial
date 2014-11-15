@@ -3,8 +3,8 @@
 immutable MPModel <: NoiseModel
   p::Integer
   n::Integer
-  c::Float64
-  sigma::Float64
+  c::Number
+  sigma::Number
 end
 
 ## Constructors
@@ -86,7 +86,7 @@ function svec_overlap(m::MPModel, s::Number)
       l, r = 0, 0
     else
       sp = s / sigma / sqrt(n)
-      l = sqrt((sp^4 - c) / (sp^4 + c * sp^2)),
+      l = sqrt((sp^4 - c) / (sp^4 + c * sp^2))
       r = sqrt((sp^4 - c) / (sp^4 + sp^2))
     end
     (l, r)

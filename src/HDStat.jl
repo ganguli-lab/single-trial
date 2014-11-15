@@ -2,6 +2,8 @@ module HDStat
 
 # models
 export NoiseModel, MPModel
+# sampling
+export rand
 # spectrum
 export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
 # low-rank perturbations

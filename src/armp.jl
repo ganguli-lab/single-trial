@@ -7,8 +7,8 @@ using Optim
 immutable ARMPModel <: NoiseModel
 	p::Integer
 	n::Integer
-	c::Float64 # c = p / n
-	phi::Float64
+	c::Number # c = p / n
+	phi::Number
 
 	function ARMPModel(p::Integer, n::Integer, phi::Number)
 		c = (p / n)
