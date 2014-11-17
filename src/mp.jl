@@ -1,20 +1,20 @@
 # A Marchenko-Pastur type uncorrelated noise model
 
 immutable MPModel <: NoiseModel
-  p::Integer
-  n::Integer
+  n::Integer # number of neurons
+  p::Integer # number of trials
   c::Number
   sigma::Number
 end
 
 ## Constructors
 
-function MPModel(p::Integer, n::Integer, sigma::Number)
-  c = p / n
+function MPModel(n::Integer, p::Integer, sigma::Number)
+  c = n / p
   if 0 >= c || 0 >= sigma
     error("c or sigma out of bound")
   else
-    MPModel(p, n, c, sigma)
+    MPModel(n, p, c, sigma)
   end
 end
 
@@ -24,20 +24,20 @@ function MPModel(cp::Number, sigma::Number)
   end
 
   if cp < 1
-    p, n = 1000::Integer, int(p / cp)
+    n, p = 1000::Integer, int(1000 / cp)
   else
-    n, p = 1000::Integer, int(n * cp)
+    p, n = 1000::Integer, int(1000 * cp)
   end
-  c = p / n
+  c = n / p
 
   if abs(c - cp) > epsilon; warn(string("actual c set to ", c)); end
 
-  MPModel(p, n, c, sigma)
+  MPModel(n, p, c, sigma)
 end
 
 ## Sampling
 
-rand(m::MPModel) = randn(m.p, m.n) * m.sigma
+rand(m::MPModel) = randn(m.n, m.p) * m.sigma
 
 ## Eigenvalue and singular value spectrum
 ##   Wikipedia Marchenko–Pastur distribution
@@ -49,7 +49,7 @@ ev_ub(m::MPModel) = m.sigma^2 * (sqrt(m.n) + sqrt(m.p))^2
 # TODO: might need better handling at the lower bound of support, when p == n
 function ev_spec(m::MPModel)
   l, u = ev_lb(m), ev_ub(m)
-  x -> sqrt((u - x) * (x - l)) / x / 2 / pi / m.sigma^2 / min(m.p, m.n)
+  x -> sqrt((u - x) * (x - l)) / x / 2 / pi / m.sigma^2 / min(m.n, m.p)
 end
 
 sv_lb(m::MPModel) = sqrt(ev_lb(m))
@@ -65,26 +65,26 @@ end
 ##   Benaych-Georges, F. & Nadakuditi, R., 2012
 ##   Gavish, M. & Donoho D. L., 2014
 
-ev_sigthresh(m::MPModel) = m.sigma^2 * sqrt(m.p * m.n)
+ev_sigthresh(m::MPModel) = m.sigma^2 * sqrt(m.n * m.p)
 
 sv_sigthresh(m::MPModel) = sqrt(ev_sigthresh(m))
 
 function sv_xfer(m::MPModel, s::Number)
-  let sigma = m.sigma, c = m.c, n = m.n
+  let sigma = m.sigma, c = m.c, p = m.p
     if s < sv_sigthresh(m); return sv_ub(m); end
-    sp = s / sigma / sqrt(n)
-    sqrt((sp + 1 / sp) * (sp + c / sp)) * sigma * sqrt(n)
+    sp = s / sigma / sqrt(p)
+    sqrt((sp + 1 / sp) * (sp + c / sp)) * sigma * sqrt(p)
   end
 end
 
 ev_xfer(m::MPModel, ev::Number) = sv_xfer(m, sqrt(ev))^2
 
 function svec_overlap(m::MPModel, s::Number)
-  let sigma = m.sigma, c = m.c, n = m.n
+  let sigma = m.sigma, c = m.c, p = m.p
     if s <= sv_sigthresh(m)
       l, r = 0, 0
     else
-      sp = s / sigma / sqrt(n)
+      sp = s / sigma / sqrt(p)
       l = sqrt((sp^4 - c) / (sp^4 + c * sp^2))
       r = sqrt((sp^4 - c) / (sp^4 + sp^2))
     end

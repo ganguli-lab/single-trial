@@ -1,16 +1,16 @@
 immutable LowDModel <: SigModel
   k::Integer # dimensionality
-  p::Integer # embedding dimensions
-  n::Integer # num of data points
+  n::Integer # embedding dimensions
+  p::Integer # num of data points
   sigma::Number # variance
-  U::Array{Number, 2} # embedding operator, R^k -> R^p
+  U::Array{Number, 2} # embedding operator, R^k -> R^n
 end
 
 # constructors
 
-function LowDModel(k::Integer, p::Integer, n::Integer, sigma::Number)
-  U = qr(randn(p, k))[1]
-  LowDModel(k, p, n, sigma, U)
+function LowDModel(k::Integer, n::Integer, p::Integer, sigma::Number)
+  U = qr(randn(n, k))[1]
+  LowDModel(k, n, p, sigma, U)
 end
 
 # sampling

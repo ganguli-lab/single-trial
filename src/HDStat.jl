@@ -24,7 +24,7 @@ global const epsilon = sqrt(eps(Float64))
 include("mp.jl") # Marchenko-Pastur
 # include("armp.jl")
 include("lowd.jl") # Low-dimensional signal
-include("static.jl") # Static data model
+include("obs.jl") # Observation data model
 
 using Cubature
 
