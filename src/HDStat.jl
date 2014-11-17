@@ -13,9 +13,17 @@ export ev_sigthresh, ev_xfer, sv_sigthresh, sv_xfer, svec_overlap
 
 abstract NoiseModel
 
+abstract SigModel
+
+immutable StaticModel
+  noise::NoiseModel
+  sig::SigModel
+end
+
 global const epsilon = sqrt(eps(Float64))
 
 include("mp.jl")
+include("static.jl")
 # include("armp.jl")
 
 using Cubature

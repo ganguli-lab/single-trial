@@ -14,7 +14,7 @@ function MPModel(p::Integer, n::Integer, sigma::Number)
   if 0 >= c || 0 >= sigma
     error("c or sigma out of bound")
   else
-    return MPModel(p, n, c, sigma)
+    MPModel(p, n, c, sigma)
   end
 end
 
@@ -32,14 +32,12 @@ function MPModel(cp::Number, sigma::Number)
 
   if abs(c - cp) > epsilon; warn(string("actual c set to ", c)); end
 
-  return MPModel(p, n, c, sigma)
+  MPModel(p, n, c, sigma)
 end
 
 ## Sampling
 
-function rand(model::MPModel)
-  return randn(model.p, model.n) * model.sigma
-end
+rand(m::MPModel) = randn(m.p, m.n) * m.sigma
 
 ## Eigenvalue and singular value spectrum
 ##   Wikipedia Marchenko–Pastur distribution
