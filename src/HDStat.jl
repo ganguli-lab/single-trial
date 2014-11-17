@@ -15,16 +15,14 @@ abstract NoiseModel
 
 abstract SigModel
 
-immutable StaticModel
-  noise::NoiseModel
-  sig::SigModel
-end
+abstract DataModel
 
 global const epsilon = sqrt(eps(Float64))
 
-include("mp.jl")
-include("static.jl")
+include("mp.jl") # Marchenko-Pastur
 # include("armp.jl")
+include("lowd.jl") # Low-dimensional signal
+include("data.jl") # Data models
 
 using Cubature
 
