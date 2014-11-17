@@ -2,6 +2,8 @@ module HDStat
 
 # models
 export NoiseModel, MPModel
+export SigModel, LowDModel
+export DatModel, StaticModel
 # sampling
 export rand, sv_rand, ev_rand
 # spectrum
@@ -22,7 +24,7 @@ global const epsilon = sqrt(eps(Float64))
 include("mp.jl") # Marchenko-Pastur
 # include("armp.jl")
 include("lowd.jl") # Low-dimensional signal
-include("data.jl") # Data models
+include("static.jl") # Static data model
 
 using Cubature
 
