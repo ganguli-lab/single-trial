@@ -39,6 +39,8 @@ end
 
 rand(m::MPModel) = randn(m.n, m.p) * m.sigma
 
+randfull(m::MPModel) = {:Z => rand(m)}
+
 ## Eigenvalue and singular value spectrum
 ##   Wikipedia Marchenko–Pastur distribution
 

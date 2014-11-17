@@ -5,7 +5,7 @@ export NoiseModel, MPModel
 export SigModel, LowDModel
 export DatModel, StaticModel
 # sampling
-export rand, sv_rand, ev_rand
+export rand, randfull, sv_rand, ev_rand
 # spectrum
 export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
 export ev_linsupport, ev_logsupport, sv_linsupport, sv_logsupport

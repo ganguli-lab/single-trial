@@ -20,3 +20,10 @@ end
 # sampling
 
 rand(o::ObsModel) = S * (rand(o.sig) + rand(o.noise))
+
+function randfull(o::ObsModel)
+  rst = merge(randfull(o.sig), randfull(o.noise))
+  rst[:Rf] = rst[:Z] + rst[:X]
+  rst[:Rs] = S * rst[:Rf]
+  rst
+end

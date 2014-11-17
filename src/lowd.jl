@@ -16,3 +16,8 @@ end
 # sampling
 
 rand(m::LowDModel) = m.U * randn(m.k, m.p) * m.sigma
+
+function randfull(m::LowDModel)
+  X0 = randn(m.k, m.p)
+  {:X0 => X0, :X => m.U * X0}
+end
