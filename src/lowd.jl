@@ -3,7 +3,7 @@ immutable LowDModel <: SigModel
   n::Integer # embedding dimensions
   p::Integer # num of data points
   sigma::Number # variance
-  U::Array{Number, 2} # embedding operator, R^k -> R^n
+  U::Array{Float64, 2} # embedding operator, R^k -> R^n
 end
 
 # constructors

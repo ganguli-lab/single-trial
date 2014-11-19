@@ -3,7 +3,7 @@ immutable ObsModel
   n::Integer # total num of neurons
   sig::SigModel # signal model
   noise::NoiseModel # noise model
-  S::Array{Number, 2} # random sampling matrix
+  S::Array{Float64, 2} # random sampling matrix
 end
 
 # constructor

@@ -13,11 +13,13 @@ export ev_linsupport, ev_logsupport, sv_linsupport, sv_logsupport
 export ev_sigthresh, ev_xfer, sv_sigthresh, sv_xfer, svec_overlap
 # randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
-abstract NoiseModel
+abstract Model
 
-abstract SigModel
+abstract NoiseModel <: Model
 
-abstract DataModel
+abstract SigModel <: Model
+
+abstract DataModel <: Model
 
 global const epsilon = sqrt(eps(Float64))
 
@@ -46,9 +48,9 @@ end
 
 # sample singular and eiven value spectra given a noise model
 
-sv_rand(m::NoiseModel) = svd(rand(m))[2]
+sv_rand(m::Model) = svd(rand(m))[2]
 
-ev_rand(m::NoiseModel) = sv_rand(m).^2
+ev_rand(m::Model) = sv_rand(m).^2
 
 # return the support of singular or eigen value spectra given a noise model
 
