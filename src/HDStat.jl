@@ -10,7 +10,7 @@ export rand, randfull, sv_rand, ev_rand
 export ev_lb, ev_ub, sv_lb, sv_ub, ev_spec, sv_spec
 export ev_linsupport, ev_logsupport, sv_linsupport, sv_logsupport
 # low-rank perturbations
-export ev_sigthresh, ev_xfer, sv_sigthresh, sv_xfer, svec_overlap
+export ev_inputfloor, ev_ontputfloor, ev_xfer, sv_inputfloor, sv_outputfloor, sv_xfer, svec_overlap
 # randSpec, randSpecDensity, logSpecSupport, linSpecSupport, pertThresh
 
 abstract Model

@@ -67,9 +67,13 @@ end
 ##   Benaych-Georges, F. & Nadakuditi, R., 2012
 ##   Gavish, M. & Donoho D. L., 2014
 
-ev_sigthresh(m::MPModel) = m.sigma^2 * sqrt(m.n * m.p)
+ev_inputfloor(m::MPModel) = m.sigma^2 * sqrt(m.n * m.p)
 
-sv_sigthresh(m::MPModel) = sqrt(ev_sigthresh(m))
+sv_inputfloor(m::MPModel) = sqrt(ev_inputfloor(m))
+
+sv_outputfloor(m::MPModel) = sv_xfer(m, sv_inputfloor(m))
+
+ev_outputfloor(m::MPModel) = sv_outputfloor(m)^2
 
 function sv_xfer(m::MPModel, s::Number)
   let sigma = m.sigma, c = m.c, p = m.p
