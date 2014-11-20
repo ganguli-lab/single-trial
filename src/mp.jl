@@ -67,17 +67,17 @@ end
 ##   Benaych-Georges, F. & Nadakuditi, R., 2012
 ##   Gavish, M. & Donoho D. L., 2014
 
-ev_inputfloor(m::MPModel) = m.sigma^2 * sqrt(m.n * m.p)
+ev_infloor(m::MPModel) = m.sigma^2 * sqrt(m.n * m.p)
 
-sv_inputfloor(m::MPModel) = sqrt(ev_inputfloor(m))
+sv_infloor(m::MPModel) = sqrt(ev_infloor(m))
 
-sv_outputfloor(m::MPModel) = sv_xfer(m, sv_inputfloor(m))
+sv_outfloor(m::MPModel) = sv_xfer(m, sv_infloor(m))
 
-ev_outputfloor(m::MPModel) = sv_outputfloor(m)^2
+ev_outfloor(m::MPModel) = sv_outfloor(m)^2
 
 function sv_xfer(m::MPModel, s::Number)
   let sigma = m.sigma, c = m.c, p = m.p
-    if s < sv_sigthresh(m); return sv_ub(m); end
+    if s < sv_infloor(m); return sv_ub(m); end
     sp = s / sigma / sqrt(p)
     sqrt((sp + 1 / sp) * (sp + c / sp)) * sigma * sqrt(p)
   end
@@ -87,7 +87,7 @@ ev_xfer(m::MPModel, ev::Number) = sv_xfer(m, sqrt(ev))^2
 
 function svec_overlap(m::MPModel, s::Number)
   let sigma = m.sigma, c = m.c, p = m.p
-    if s <= sv_sigthresh(m)
+    if s <= sv_infloor(m)
       l, r = 0, 0
     else
       sp = s / sigma / sqrt(p)
