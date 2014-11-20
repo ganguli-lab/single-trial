@@ -1,4 +1,4 @@
-immutable ObsModel
+immutable ObsModel <: Model
   m::Integer # num of observed neurons
   n::Integer # total num of neurons
   sig::SigModel # signal model

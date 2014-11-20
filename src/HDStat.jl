@@ -1,9 +1,9 @@
 module HDStat
 
 # models
-export NoiseModel, MPModel
-export SigModel, LowDModel
-export ObsModel, StaticModel
+export NoiseModel, SigModel, ObsModel
+export MPModel
+export LowDModel
 # sampling
 export rand, randfull, sv_rand, ev_rand
 # spectrum
@@ -18,8 +18,6 @@ abstract Model
 abstract NoiseModel <: Model
 
 abstract SigModel <: Model
-
-abstract ObsModel <: Model
 
 global const epsilon = sqrt(eps(Float64))
 
