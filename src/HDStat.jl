@@ -19,7 +19,7 @@ abstract NoiseModel <: Model
 
 abstract SigModel <: Model
 
-abstract DataModel <: Model
+abstract ObsModel <: Model
 
 global const epsilon = sqrt(eps(Float64))
 
