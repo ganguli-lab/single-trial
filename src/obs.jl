@@ -13,7 +13,7 @@ function ObsModel(m, sig::SigModel, noise::NoiseModel)
     error("signal and noise dimensionality mismatch")
   end
 
-  S = eye(sig.n)[randperm(n)[1:m], :]
+  S = eye(sig.n)[randperm(sig.n)[1:m], :]
   ObsModel(m, sig.n, sig, noise, S)
 end
 
