@@ -1,51 +1,51 @@
-export ARMPModel, rand, spec, ub, lb
-
 using Optim
 
-# A high dimensional autoregressive model with shape parameter c and decay phi
-# The data dimensionality is p-by-n with correlations running across rows
+# A high dimensional AR noisemodel with shape parameter c, decay phi
+# and input standard deviation sigma
+# The data dimensionality is n-by-p with correlations running across rows
 immutable ARMPModel <: NoiseModel
-	p::Integer
-	n::Integer
-	c::Number # c = p / n
+	n::Integer # number of neurons
+	p::Integer # number of trials
+	c::Number # shape = n / p
 	phi::Number
+	sigma::Number
+end
 
-	function ARMPModel(p::Integer, n::Integer, phi::Number)
-		c = (p / n)
-		if !(0 < c && 0 < phi < 1)
-			error("c or phi out of bound")
-		else
-			return new(p, n, c, phi)
-		end
+function ARMPModel(n::Integer, p::Integer, phi::Number, sigma::Number)
+	c = n / p
+	if 0 >= c || 0 >= sigma || 0 >= phi || 1 <= phi
+		error("c, sigma, or phi out of bound")
+	else
+		return new(n, p, c, phi, sigma)
 	end
+end
 
-	function ARMPModel(cp::Number, phi::Number)
-		if !(0 < cp && 0 < phi < 1)
-			error("c or phi out of bound")
-		end
-		if cp < 1
-			p = 1000
-			n = int(p / cp)
-		else
-			n = 1000
-			p = int(n * cp)
-		end
-		c = p / n
-		if abs(c - cp) > sqrt(eps(Float64))
-			warn(string("actual c set to ", c))
-		end
-		return new(p, n, c, phi)
+function ARMPModel(cp::Number, phi::Number, sigma::Number)
+	if 0 >= cp || 0 >= sigma || 0 >= phi || 1 <= phi
+		error("c, sigma, or phi out of bound")
 	end
+	if cp < 1
+		n = 1000
+		p = int(n / cp)
+	else
+		p = 1000
+		n = int(p * cp)
+	end
+	c = p / n
+	if abs(c - cp) > sqrt(eps(Float64))
+		warn(string("actual c set to ", c))
+	end
+	return new(n, p, c, phi, sigma)
 end
 
 # sample a model
 function rand(model::ARMPModel)
-	let p = model.p, n = model.n, phi = model.phi, c = model.c
-		x = zeros(p, n)
-		P = eye(p) ./ sqrt(1.0 - phi^2)
-		x[:, 1] = P * randn(p);
-		for t in 2:n
-			x[:, t] = phi * x[:, t - 1] + randn(p)
+	let n = model.n, p = model.p, phi = model.phi, sigma = model.sigma c = model.c
+		x = zeros(n, p)
+		P = eye(n) ./ sqrt(1.0 - phi^2)
+		x[:, 1] = P * randn(n);
+		for t in 2:p
+			x[:, t] = phi * x[:, t - 1] + randn(n)
 		end
 		return x
 	end

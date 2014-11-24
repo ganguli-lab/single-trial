@@ -3,7 +3,7 @@
 immutable MPModel <: NoiseModel
   n::Integer # number of neurons
   p::Integer # number of trials
-  c::Number
+  c::Number # shape = n / p
   sigma::Number
 end
 
