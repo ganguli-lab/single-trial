@@ -1,4 +1,6 @@
-# using Optim
+using Optim, Cubature, Polynomials
+
+armp_epsilon = 1e-4
 
 # A high dimensional AR noisemodel with shape parameter c, decay phi
 # and input standard deviation sigma
@@ -18,7 +20,7 @@ function ARMPModel(n::Integer, p::Integer, phi::Number, sigma::Number)
 	if 0 >= c || 0 >= sigma || 0 >= phi || 1 <= phi
 		error("c, sigma, or phi out of bound")
 	else
-		return new(n, p, c, phi, sigma)
+		ARMPModel(n, p, c, phi, sigma)
 	end
 end
 
@@ -37,13 +39,13 @@ function ARMPModel(cp::Number, phi::Number, sigma::Number)
 	if abs(c - cp) > sqrt(eps(Float64))
 		warn(string("actual c set to ", c))
 	end
-	return new(n, p, c, phi, sigma)
+	ARMPModel(n, p, c, phi, sigma)
 end
 
 ## Sampling
 
 function rand(m::ARMPModel)
-	let n = m.n, p = m.p, phi = m.phi, sigma = m.sigma c = m.c
+	let n = m.n, p = m.p, c = m.c, phi = m.phi, sigma = m.sigma
 		x = zeros(n, p)
 		P = eye(n) ./ sqrt(1.0 - phi^2)
 		x[:, 1] = P * randn(n);
@@ -60,17 +62,15 @@ randfull(m::ARMPModel) = {:Z => rand(m)}
 ##   J. Yao, 2011
 
 # TODO: bit a of hack here for the c > 1 case, no reference
-zFunc(m::ARMPModel, s) = (-1 ./ s + sign(s + (1 + m.phi^2) / m.c) ./ sqrt((m.c * s + 1 + m.phi^2).^2 - 4 * m.phi^2))
+zFunc(m::ARMPModel, s::Number) = -1 ./ s + sign(s + (1 + m.phi^2) / m.c) ./ sqrt((m.c * s + 1 + m.phi^2).^2 - 4 * m.phi^2)
 
 # Upper bound of the eigenvalue spectrum
 function ev_ub(m::ARMPModel)
-	f = zFunc(m)
 	bounds = [-1 / m.c * (1 - m.phi)^2 + sqrt(eps(Float64)), -sqrt(eps(Float64))]
-	return optimize(f, bounds[1], bounds[2]).f_minimum
+	return m.sigma^2 * m.p * optimize(x -> zFunc(m, x), bounds[1], bounds[2]).f_minimum
 end
 
 function ev_lb(m::ARMPModel)
-	f = zFunc(m)
 	if m.c >= 1.0
 		bounds = [-1e16, -1 / m.c * (1 + m.phi)^2 - sqrt(eps(Float64))];
 	else
@@ -79,37 +79,45 @@ function ev_lb(m::ARMPModel)
 	if bounds[1] >= bounds[2]
 		println(m.p, " ", m.n)
 	end
-	return -optimize(x -> 0.0 - f(x), bounds[1], bounds[2]).f_minimum;
+	return -m.sigma^2 * m.p * optimize(x -> 0.0 - zFunc(m, x), bounds[1], bounds[2]).f_minimum;
 end
 
 sv_lb(m::ARMPModel) = sqrt(ev_lb(m))
 
 sv_ub(m::ARMPModel) = sqrt(ev_ub(m))
 
-# function stieltjes(m::ARMPModel)
-# 	global epsilon
-#
-# 	function S(z)
-# 		global zPoints
-# 		s::Complex128 = 0.1 + 1im
-# 		snew::Complex128 = 0.0
-# 		while true
-# 			snew = 1 / (-z + 1.0 / sqrt((m.c * s + 1.0 + m.phi^2)^2 - 4.0 * m.phi^2))
-# 			# println(snew)
-# 			if abs(snew - s) < epsilon
-# 				return s
-# 			end
-# 			s = snew
-# 		end
-# 	end
-# 	return S
-# end
-#
-# # Returns a spectrum function for the given model
-# function spec(model::ARMPModel)
-# 	global epsilon
-# 	s = stieltjes(model)
-#
-# 	#return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
-# 	return x -> abs(imag(s(x + epsilon * 1im))) / pi
-# end
+function stieltjes(m::ARMPModel, z::Number; max_iter=10000)
+	coefs = [(1 - m.phi^2)^2,
+					 2 * (m.c * (1 + m.phi^2) + z * (1 - m.phi^2)^2),
+					 (1 - m.phi^2)^2 * z^2 + 4 * m.c * z * (1 + m.phi^2) + m.c^2 - 1,
+					 2 * m.c * z * (m.c + z + z * m.phi^2),
+					 m.c^2 * z^2]
+	candidates = roots(Poly(coefs))
+	tmp = map(s -> abs(z + 1 / s - 1 / sqrt((m.c * s + 1 + m.phi^2)^2 - 4 * m.phi^2)), candidates)
+	tmp = tmp[tmp .< sqrt(eps(Float64))]
+	_, ix = findmax(abs(imag(candidates)))
+	return candidates[ix]
+end
+
+function ev_spec(m::ARMPModel)
+	x -> abs(imag(stieltjes(m, (x / m.p / m.sigma^2) + 1e-3 * 1im))) / pi / m.p / m.sigma^2
+end
+
+function sv_spec(m::ARMPModel)
+	es = ev_spec(m)
+	x -> es(x^2) * 2 * x
+end
+
+## Low-rank perturbations. see:
+##   Benaych-Georges, F. & Nadakuditi, R., 2012
+
+function dtransform(m::ARMPModel, z::Number)
+	nf = m.p * m.sigma^2
+	l, u, mu = ev_lb(m), ev_ub(m), ev_spec(m)
+	tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
+	tmp * (m.c * tmp + (1 - m.c) / sqrt(z))
+end
+
+ev_infloor(m::ARMPModel) = 1 / dtransform(m, ev_ub(m) + armp_epsilon)
+
+sv_infloor(m::ARMPModel) = sqrt(ev_infloor(m))

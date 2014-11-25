@@ -26,24 +26,6 @@ include("armp.jl") # Marchenko-Pastur-like for autoregressive model
 include("lowd.jl") # Low-dimensional signal
 include("obs.jl") # Observation data model
 
-using Cubature
-
-function dtransform(mu, l, u, c)
-  function D(z)
-    tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + 1e-6, u - 1e-6; reltol=1e-3, abstol=1e-3)[1]
-    return tmp * (c * tmp + (1 - c) / sqrt(z))
-  end
-  return D
-end
-
-function pertThresh(mu, l, u, c)
-  1.0 / dtransform(mu, l, u, c)(u + 1e-4)
-end
-
-function pertThresh(model::NoiseModel)
-  pertThresh(spec(model), lb(model), ub(model), model.c)
-end
-
 # sample singular and eiven value spectra given a noise model
 
 sv_rand(m::Model) = svd(rand(m))[2]
