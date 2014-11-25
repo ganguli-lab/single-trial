@@ -28,7 +28,7 @@ include("obs.jl") # Observation data model
 
 # sample singular and eiven value spectra given a noise model
 
-sv_rand(m::Model) = svd(rand(m))[2]
+sv_rand(m::Model) = [svd(rand(m))[2], zeros(max(0, m.n - m.p))]
 
 ev_rand(m::Model) = sv_rand(m).^2
 

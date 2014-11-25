@@ -44,14 +44,14 @@ randfull(m::MPModel) = {:Z => rand(m)}
 ## Eigenvalue and singular value spectrum
 ##   Wikipedia Marchenko–Pastur distribution
 
-ev_lb(m::MPModel) = m.sigma^2 * abs(sqrt(m.n) - sqrt(m.p))^2
+ev_lb(m::MPModel) = m.sigma^2 * (sqrt(m.n) - sqrt(m.p))^2
 
 ev_ub(m::MPModel) = m.sigma^2 * (sqrt(m.n) + sqrt(m.p))^2
 
 # TODO: might need better handling at the lower bound of support, when p == n
 function ev_spec(m::MPModel)
   l, u = ev_lb(m), ev_ub(m)
-  x -> sqrt((u - x) * (x - l)) / x / 2 / pi / m.sigma^2 / min(m.n, m.p)
+  x -> sqrt((u - x) * (x - l)) / x / 2 / pi / m.sigma^2 / m.n
 end
 
 sv_lb(m::MPModel) = sqrt(ev_lb(m))
