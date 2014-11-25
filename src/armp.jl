@@ -87,14 +87,17 @@ sv_lb(m::ARMPModel) = sqrt(ev_lb(m))
 sv_ub(m::ARMPModel) = sqrt(ev_ub(m))
 
 function stieltjes(m::ARMPModel, z::Number; max_iter=10000)
+	# coefficients for the 4th order polynomial
 	coefs = [(1 - m.phi^2)^2,
 					 2 * (m.c * (1 + m.phi^2) + z * (1 - m.phi^2)^2),
 					 (1 - m.phi^2)^2 * z^2 + 4 * m.c * z * (1 + m.phi^2) + m.c^2 - 1,
 					 2 * m.c * z * (m.c + z + z * m.phi^2),
 					 m.c^2 * z^2]
 	candidates = roots(Poly(coefs))
+	# check against original equation
 	tmp = map(s -> abs(z + 1 / s - 1 / sqrt((m.c * s + 1 + m.phi^2)^2 - 4 * m.phi^2)), candidates)
 	tmp = tmp[tmp .< sqrt(eps(Float64))]
+	# HACK, returning the value with the largest imag part
 	_, ix = findmax(abs(imag(candidates)))
 	return candidates[ix]
 end
@@ -115,7 +118,12 @@ function dtransform(m::ARMPModel, z::Number)
 	nf = m.p * m.sigma^2
 	l, u, mu = ev_lb(m), ev_ub(m), ev_spec(m)
 	tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
-	tmp * (m.c * tmp + (1 - m.c) / sqrt(z))
+	if m.n > m.p
+		tmp *= m.c
+		tmp * (tmp / m.c + (1 - 1 / m.c) / sqrt(z))
+	else
+		tmp * (m.c * tmp + (1 - m.c) / sqrt(z))
+	end
 end
 
 ev_infloor(m::ARMPModel) = 1 / dtransform(m, ev_ub(m) + armp_epsilon)
