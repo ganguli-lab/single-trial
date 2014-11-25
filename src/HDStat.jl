@@ -2,7 +2,7 @@ module HDStat
 
 # models
 export NoiseModel, SigModel, ObsModel
-export MPModel
+export MPModel, ARMPModel
 export LowDModel
 # sampling
 export rand, randfull, sv_rand, ev_rand
@@ -22,7 +22,7 @@ abstract SigModel <: Model
 global const epsilon = sqrt(eps(Float64))
 
 include("mp.jl") # Marchenko-Pastur
-# include("armp.jl")
+include("armp.jl") # Marchenko-Pastur-like for autoregressive model
 include("lowd.jl") # Low-dimensional signal
 include("obs.jl") # Observation data model
 

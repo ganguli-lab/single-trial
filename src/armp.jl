@@ -1,4 +1,4 @@
-using Optim
+# using Optim
 
 # A high dimensional AR noisemodel with shape parameter c, decay phi
 # and input standard deviation sigma
@@ -10,6 +10,8 @@ immutable ARMPModel <: NoiseModel
 	phi::Number
 	sigma::Number
 end
+
+# Constructors
 
 function ARMPModel(n::Integer, p::Integer, phi::Number, sigma::Number)
 	c = n / p
@@ -38,9 +40,10 @@ function ARMPModel(cp::Number, phi::Number, sigma::Number)
 	return new(n, p, c, phi, sigma)
 end
 
-# sample a model
-function rand(model::ARMPModel)
-	let n = model.n, p = model.p, phi = model.phi, sigma = model.sigma c = model.c
+## Sampling
+
+function rand(m::ARMPModel)
+	let n = m.n, p = m.p, phi = m.phi, sigma = m.sigma c = m.c
 		x = zeros(n, p)
 		P = eye(n) ./ sqrt(1.0 - phi^2)
 		x[:, 1] = P * randn(n);
@@ -51,57 +54,62 @@ function rand(model::ARMPModel)
 	end
 end
 
+randfull(m::ARMPModel) = {:Z => rand(m)}
+
+## Eigenvalue and singular value spectrum
+##   J. Yao, 2011
+
 # TODO: bit a of hack here for the c > 1 case, no reference
-function zFunc(model::ARMPModel)
-	# return s -> (-1 ./ s + 1 ./ sqrt((model.c * s + 1 + model.phi^2).^2 - 4 * model.phi^2))
-	return s -> (-1 ./ s + sign(s + (1 + model.phi^2) / model.c) ./ sqrt((model.c * s + 1 + model.phi^2).^2 - 4 * model.phi^2))
-end
+zFunc(m::ARMPModel, s) = (-1 ./ s + sign(s + (1 + m.phi^2) / m.c) ./ sqrt((m.c * s + 1 + m.phi^2).^2 - 4 * m.phi^2))
 
 # Upper bound of the eigenvalue spectrum
-function ub(model::ARMPModel)
-	f = zFunc(model)
-	bounds = [-1 / model.c * (1 - model.phi)^2 + sqrt(eps(Float64)), -sqrt(eps(Float64))]
+function ev_ub(m::ARMPModel)
+	f = zFunc(m)
+	bounds = [-1 / m.c * (1 - m.phi)^2 + sqrt(eps(Float64)), -sqrt(eps(Float64))]
 	return optimize(f, bounds[1], bounds[2]).f_minimum
 end
 
-# Lower bound of the eigenvalue spectrum
-function lb(model::ARMPModel)
-	f = zFunc(model)
-	if model.c >= 1.0
-		bounds = [-1e16, -1 / model.c * (1 + model.phi)^2 - sqrt(eps(Float64))];
+function ev_lb(m::ARMPModel)
+	f = zFunc(m)
+	if m.c >= 1.0
+		bounds = [-1e16, -1 / m.c * (1 + m.phi)^2 - sqrt(eps(Float64))];
 	else
 		bounds = [sqrt(eps(Float64)), 1e16];
 	end
 	if bounds[1] >= bounds[2]
-		println(model.p, " ", model.n)
+		println(m.p, " ", m.n)
 	end
 	return -optimize(x -> 0.0 - f(x), bounds[1], bounds[2]).f_minimum;
 end
 
-function stieltjes(model::ARMPModel)
-	global epsilon
+sv_lb(m::ARMPModel) = sqrt(ev_lb(m))
 
-	function S(z)
-		global zPoints
-		s::Complex128 = 0.1 + 1im
-		snew::Complex128 = 0.0
-		while true
-			snew = 1 / (-z + 1.0 / sqrt((model.c * s + 1.0 + model.phi^2)^2 - 4.0 * model.phi^2))
-			# println(snew)
-			if abs(snew - s) < epsilon
-				return s
-			end
-			s = snew
-		end
-	end
-	return S
-end
+sv_ub(m::ARMPModel) = sqrt(ev_ub(m))
 
-# Returns a spectrum function for the given model
-function spec(model::ARMPModel)
-	global epsilon
-	s = stieltjes(model)
-
-	#return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
-	return x -> abs(imag(s(x + epsilon * 1im))) / pi
-end
+# function stieltjes(m::ARMPModel)
+# 	global epsilon
+#
+# 	function S(z)
+# 		global zPoints
+# 		s::Complex128 = 0.1 + 1im
+# 		snew::Complex128 = 0.0
+# 		while true
+# 			snew = 1 / (-z + 1.0 / sqrt((m.c * s + 1.0 + m.phi^2)^2 - 4.0 * m.phi^2))
+# 			# println(snew)
+# 			if abs(snew - s) < epsilon
+# 				return s
+# 			end
+# 			s = snew
+# 		end
+# 	end
+# 	return S
+# end
+#
+# # Returns a spectrum function for the given model
+# function spec(model::ARMPModel)
+# 	global epsilon
+# 	s = stieltjes(model)
+#
+# 	#return x -> abs(real((s(x + epsilon * 1im) - s(x - epsilon * 1im)) / 2.0im / pi))
+# 	return x -> abs(imag(s(x + epsilon * 1im))) / pi
+# end
