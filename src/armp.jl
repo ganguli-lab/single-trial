@@ -114,11 +114,11 @@ end
 ## Low-rank perturbations. see:
 ##   Benaych-Georges, F. & Nadakuditi, R., 2012
 
+# dtransform for the neuron by neuron covariance
 function dtransform(m::ARMPModel, z::Number)
-	nf = m.p * m.sigma^2
 	l, u, mu = ev_lb(m), ev_ub(m), ev_spec(m)
 	tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
-	if m.n > m.p
+	if m.n > m.p # do the math for data matrix transposed
 		tmp *= m.c
 		tmp * (tmp / m.c + (1 - 1 / m.c) / sqrt(z))
 	else
@@ -129,3 +129,18 @@ end
 ev_infloor(m::ARMPModel) = 1 / dtransform(m, ev_ub(m) + armp_epsilon)
 
 sv_infloor(m::ARMPModel) = sqrt(ev_infloor(m))
+
+## Special model to treat the ARMP Correlation matrix
+immutable ARMPCorrModel
+	armp::ARMPModel
+end
+
+function dtransform(m::ARMPCorrModel, z::Number)
+	# singular/eigen values for the correlation
+	l, u, mu = ev_lb(m.armp), ev_ub(m.armp), ev_spec(m.armp)
+	tmp = pquadrature(t -> z / (z^2 - t^2) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
+	if m.armp.n > m.armp.p; tmp *= m.armp.c; end
+	tmp * tmp
+end
+
+ev_infloor(m::ARMPCorrModel) = 1 / sqrt(dtransform(m, ev_ub(m.armp) + armp_epsilon))
