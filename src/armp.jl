@@ -130,6 +130,10 @@ ev_infloor(m::ARMPModel) = 1 / dtransform(m, ev_ub(m) + armp_epsilon)
 
 sv_infloor(m::ARMPModel) = sqrt(ev_infloor(m))
 
+sv_outfloor(m::ARMPModel) = sv_ub(m)
+
+ev_outfloor(m::ARMPModel) = ev_ub(m)
+
 ## Special model to treat the ARMP Correlation matrix
 immutable ARMPCorrModel
 	armp::ARMPModel

@@ -2,7 +2,7 @@ module HDStat
 
 # models
 export NoiseModel, SigModel, ObsModel
-export MPModel, ARMPModel
+export MPModel, ARMPModel, ARMPCorrModel
 export LowDModel
 # sampling
 export rand, randfull, sv_rand, ev_rand
