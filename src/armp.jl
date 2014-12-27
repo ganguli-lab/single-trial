@@ -25,7 +25,7 @@ function ARMPModel(n::Integer, p::Integer, phi::Number, sigma::Number)
 end
 
 function ARMPModel(cp::Number, phi::Number, sigma::Number)
-	if 0 >= cp || 0 >= sigma || 0 >= phi || 1 <= phi
+	if 0 <= cp || 0 <= sigma || 0 <= phi || 1 >= phi
 		error("c, sigma, or phi out of bound")
 	end
 	if cp < 1
