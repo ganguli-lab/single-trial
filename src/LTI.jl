@@ -1,6 +1,6 @@
 module LTI
 
-export genDyn, genDynRot, genObsSamp, dlyap, runLTI, xCov, xCovTheory, hankel, hoKalman
+export genDyn, genDynRot, genObsSamp, dlyap, runLTI, runTanh, xCov, xCovTheory, hankel, hoKalman
 
 function genDyn(N, K, dFast, dSlowLow, dSlowDiff)
   Ds = rand(K) * dSlowDiff + dSlowLow;
@@ -55,6 +55,29 @@ function runLTI(A, C, Q, R, T::Int64; P=nothing)
   X[:, 1] = p * randn(N)
   for t = 2:T
     X[:, t] = A * X[:, t - 1] + q * randn(N)
+  end
+
+  Y = C * X + r * randn(M, T);
+  return X, Y
+end
+
+function runTanh(A, C, Q, R, scale, T::Int64; P=nothing)
+  M, N = size(C)
+
+  q = real(sqrtm(Q))
+  r = real(sqrtm(R))
+
+  if P == nothing
+    p = real(sqrtm(dlyap(A, Q)))
+  else
+    p = real(sqrtm(P))
+  end
+
+  X = zeros(N, T)
+  X[:, 1] = p * randn(N)
+  for t = 2:T
+    X[:, t] = scale * A * tanh(X[:, t - 1] / scale) + q * randn(N)
+    # X[:, t] = A * X[:, t - 1] + q * randn(N)
   end
 
   Y = C * X + r * randn(M, T);
