@@ -1,6 +1,6 @@
 module LTI
 
-export genDyn, genDynRot, genObsSamp, dlyap, runLTI, runTanh, xCov, xCovTheory, hankel, hoKalman
+export genDyn, genDynRot, genDynRot2, genObsSamp, dlyap, runLTI, runTanh, xCov, xCovTheory, hankel, hoKalman
 
 function genDyn(N, K, dFast, dSlowLow, dSlowDiff)
   Ds = rand(K) * dSlowDiff + dSlowLow;
@@ -18,6 +18,16 @@ function genDynRot(N, K, dFast, dSlowLow, dSlowDiff, omegaScale)
            U[:, 1:Khalf] - U[:, Khalf + 1:K] * 1im,
            U[:, K + 1:end] * sqrt(2)) / sqrt(2);
   return real(U * diagm(Ds) * U'), U, Ds
+end
+
+function genDynRot2(K, phin, phis, omegaScale)
+  Khalf = div(K, 2)
+  Ds = exp(1im * (rand(Khalf) * 2 - 1)) .* (phis * ones(Khalf) - phin) / (1 - phin);
+  Ds = [Ds; conj(Ds)];
+  U, _ = qr(randn(K, K));
+  U = hcat(U[:, 1:Khalf] + U[:, Khalf + 1:K] * 1im,
+           U[:, 1:Khalf] - U[:, Khalf + 1:K] * 1im) / sqrt(2);
+  return real(U * diagm(Ds) * U')
 end
 
 # Generate a linear observation matrix that randomly samples M out of N states
@@ -61,7 +71,7 @@ function runLTI(A, C, Q, R, T::Int64; P=nothing)
   return X, Y
 end
 
-function runTanh(A, C, Q, R, scale, T::Int64; P=nothing)
+function runTanh(W, phin, C, Q, R, scale, T::Int64; P=nothing, post=false)
   M, N = size(C)
 
   q = real(sqrtm(Q))
@@ -76,8 +86,11 @@ function runTanh(A, C, Q, R, scale, T::Int64; P=nothing)
   X = zeros(N, T)
   X[:, 1] = p * randn(N)
   for t = 2:T
-    X[:, t] = scale * A * tanh(X[:, t - 1] / scale) + q * randn(N)
-    # X[:, t] = A * X[:, t - 1] + q * randn(N)
+    if post
+        X[:, t] = phin * X[:, t-1] + scale * tanh((1 - phin) * W * X[:, t-1] / scale) + q * randn(N)
+    else
+        X[:, t] = phin * X[:, t-1] + (1 - phin) * scale * W * tanh(X[:, t-1] / scale) + q * randn(N)
+    end
   end
 
   Y = C * X + r * randn(M, T);

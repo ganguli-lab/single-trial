@@ -1,6 +1,6 @@
 using Optim, Cubature, Polynomials
 
-armp_epsilon = 1e-4
+armp_epsilon = 1e-6
 
 # A high dimensional AR noisemodel with shape parameter c, decay phi
 # and input standard deviation sigma
@@ -48,9 +48,9 @@ function rand(m::ARMPModel)
 	let n = m.n, p = m.p, c = m.c, phi = m.phi, sigma = m.sigma
 		x = zeros(n, p)
 		P = eye(n) ./ sqrt(1.0 - phi^2)
-		x[:, 1] = P * randn(n);
+		x[:, 1] = P * randn(n) * sigma;
 		for t in 2:p
-			x[:, t] = phi * x[:, t - 1] + randn(n)
+			x[:, t] = phi * x[:, t - 1] + randn(n) * sigma
 		end
 		return x
 	end
@@ -71,7 +71,7 @@ function ev_ub(m::ARMPModel)
 end
 
 function ev_lb(m::ARMPModel)
-	if m.c >= 1.0
+	if m.c > 1.0
 		bounds = [-1e16, -1 / m.c * (1 + m.phi)^2 - sqrt(eps(Float64))];
 	else
 		bounds = [sqrt(eps(Float64)), 1e16];
@@ -117,7 +117,7 @@ end
 # dtransform for the neuron by neuron covariance
 function dtransform(m::ARMPModel, z::Number)
 	l, u, mu = ev_lb(m), ev_ub(m), ev_spec(m)
-	tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
+	tmp = pquadrature(t -> sqrt(z) / (z - t) * mu(t), l + sqrt(eps(Float64)), u - sqrt(eps(Float64)); reltol=1e-6, abstol=1e-6)[1]
 	if m.n > m.p # do the math for data matrix transposed
 		tmp *= m.c
 		tmp * (tmp / m.c + (1 - 1 / m.c) / sqrt(z))
@@ -142,7 +142,7 @@ end
 function dtransform(m::ARMPCorrModel, z::Number)
 	# singular/eigen values for the correlation
 	l, u, mu = ev_lb(m.armp), ev_ub(m.armp), ev_spec(m.armp)
-	tmp = pquadrature(t -> z / (z^2 - t^2) * mu(t), l + armp_epsilon, u - armp_epsilon; reltol=1e-3, abstol=1e-3)[1]
+	tmp = pquadrature(t -> z / (z^2 - t^2) * mu(t), l + sqrt(eps(Float64)), u - sqrt(eps(Float64)); reltol=1e-6, abstol=1e-6)[1]
 	if m.armp.n > m.armp.p; tmp *= m.armp.c; end
 	tmp * tmp
 end
