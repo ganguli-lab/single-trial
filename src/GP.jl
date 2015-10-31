@@ -268,7 +268,7 @@ end
 # eigenvalues for the posterior tuning curve correlation matrix
 function lq(k, T, ker::Kernel; ε=1e-12)
     d = ker.Delta
-	return T * tanh(1 / 2 * d)^2 * (exp(-(2T-2k)*d) + exp(-2k*d)) / (1 - exp(-2T*d)) + ε
+	return T * tanh(d / 2)^2 * (exp(-(2T-2k)*d) + exp(-2k*d)) / (1 - exp(-2T*d)) + ε
 end
 
 # the Q matrix, or the expected correlation of the posterior tuning curves
