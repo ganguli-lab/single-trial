@@ -203,7 +203,7 @@ function nll_helper!(rs, Δ, σs, σn; gpars=nothing)
     return nll
 end
 
-function infer(rs; Δ0=0.3, Δmin=0.1, σsmin=1e-6, σnmin=1e-6)
+function infer(rs; Δ0=0.3, Δmin=1e-6, σsmin=1e-6, σnmin=1e-6)
     function cost(z)
         let Δ = z[1]^2 + Δmin, σs = z[2]^2 + σsmin, σn = z[3]^2 + σnmin
             return nll_helper!(rs, Δ, σs, σn)
